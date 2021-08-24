@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Build an ML model that predicts which Tweets are about real disasters.(Link) | Aditya’s ML Blog</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Build an ML model that predicts which Tweets are about real disasters.(Link)" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Here we break the ML jargon into simple basic pieces using python code." />
+<meta property="og:description" content="Here we break the ML jargon into simple basic pieces using python code." />
+<link rel="canonical" href="https://magicaditya.github.io/mlexplained/2021/08/23/Naive-Bayes-Explained.html" />
+<meta property="og:url" content="https://magicaditya.github.io/mlexplained/2021/08/23/Naive-Bayes-Explained.html" />
+<meta property="og:site_name" content="Aditya’s ML Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-08-23T00:00:00-05:00" />
+<script type="application/ld+json">
+{"datePublished":"2021-08-23T00:00:00-05:00","url":"https://magicaditya.github.io/mlexplained/2021/08/23/Naive-Bayes-Explained.html","@type":"BlogPosting","headline":"Build an ML model that predicts which Tweets are about real disasters.(Link)","dateModified":"2021-08-23T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://magicaditya.github.io/mlexplained/2021/08/23/Naive-Bayes-Explained.html"},"description":"Here we break the ML jargon into simple basic pieces using python code.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/mlexplained/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://magicaditya.github.io/mlexplained/feed.xml" title="Aditya's ML Blog" /><link rel="shortcut icon" type="image/x-icon" href="/mlexplained/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/mlexplained/">Aditya&#39;s ML Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/mlexplained/about/">About Me</a><a class="page-link" href="/mlexplained/search/">Search</a><a class="page-link" href="/mlexplained/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Build an ML model that predicts which Tweets are about real disasters.([Link](https://www.kaggle.com/c/nlp-getting-started))</h1><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-08-23T00:00:00-05:00" itemprop="datePublished">
+        Aug 23, 2021
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      6 min read
+    
+</span></p>
+
+    
+
+    
+      
+        <div class="pb-5 d-flex flex-wrap flex-justify-end">
+          <div class="px-2">
+
+    <a href="https://github.com/magicaditya/mlexplained/tree/master/_notebooks/2021-08-23-Naive Bayes Explained.ipynb" role="button" target="_blank">
+<img class="notebook-badge-image" src="/mlexplained/assets/badges/github.svg" alt="View On GitHub">
+    </a>
+</div>
+
+          <div class="px-2">
+    <a href="https://mybinder.org/v2/gh/magicaditya/mlexplained/master?filepath=_notebooks%2F2021-08-23-Naive+Bayes+Explained.ipynb" target="_blank">
+        <img class="notebook-badge-image" src="/mlexplained/assets/badges/binder.svg" alt="Open In Binder"/>
+    </a>
+</div>
+
+          <div class="px-2">
+    <a href="https://colab.research.google.com/github/magicaditya/mlexplained/blob/master/_notebooks/2021-08-23-Naive Bayes Explained.ipynb" target="_blank">
+        <img class="notebook-badge-image" src="/mlexplained/assets/badges/colab.svg" alt="Open In Colab"/>
+    </a>
+</div>
+        </div>
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/2021-08-23-Naive Bayes Explained.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Import-packages">Import packages<a class="anchor-link" href="#Import-packages"> </a></h1>
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+
+<span class="c1"># Data Vizualization packages</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="c1"># Sklearn packages</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+
+<span class="c1"># NLP packages</span>
+<span class="kn">import</span> <span class="nn">nltk</span>
+<span class="kn">from</span> <span class="nn">nltk.tokenize</span> <span class="kn">import</span> <span class="n">word_tokenize</span>
+<span class="kn">import</span> <span class="nn">emoji</span>
+<span class="kn">from</span> <span class="nn">nltk.corpus</span> <span class="kn">import</span> <span class="n">stopwords</span>
+<span class="kn">from</span> <span class="nn">nltk.stem</span> <span class="kn">import</span> <span class="n">PorterStemmer</span>
+<span class="kn">from</span> <span class="nn">nltk.tokenize</span> <span class="kn">import</span> <span class="n">TweetTokenizer</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Helper-functions">Helper functions<a class="anchor-link" href="#Helper-functions"> </a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Tips-on-data-cleaning">Tips on data cleaning<a class="anchor-link" href="#Tips-on-data-cleaning"> </a></h2><ul>
+<li>Consider the words of your corpus as case insensitive. ex "THE"=="the"=="The"</li>
+<li>Represent all interrupting punctuation marks as a single special word of the vocabulary.</li>
+<li>Ignore non interrupting punctuation marks such a quotes.</li>
+<li>Collapse multiple sign marks into a single mark. Ex- "???" -&gt; "?" </li>
+<li>If numbers do not carry a special meaning in your use case you can drop them.</li>
+<li>If numbers are meaingful for your use case you can keep them, however if you have a lot of unique numbers in your corpus it's safe to replace them with a single token.</li>
+<li>It is usually safe to drop the special characters like $\alpha$, $\mathscr{L}$.</li>
+<li>Special words Emojis or hashtags can be considered as a separate word.</li>
+</ul>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">nltk</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s1">&#39;punkt&#39;</span><span class="p">)</span> <span class="c1"># Pre trained tokenizer for english.</span>
+
+<span class="n">corpus</span> <span class="o">=</span> <span class="s1">&#39;Who ❤️ &quot;word embeddings&quot; in 2020? I do!!!&#39;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[,!?;-]+&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">word_tokenize</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">char</span> <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">data</span> <span class="k">if</span> <span class="n">char</span><span class="o">.</span><span class="n">isalpha</span><span class="p">()</span> <span class="ow">or</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39;.&#39;</span> <span class="ow">or</span> <span class="n">emoji</span><span class="o">.</span><span class="n">get_emoji_regexp</span><span class="p">()</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">char</span><span class="p">)]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">process_tweet</span><span class="p">(</span><span class="n">tweet</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Input:</span>
+<span class="sd">        tweet: a string containing a tweet</span>
+<span class="sd">    Output:</span>
+<span class="sd">        tweets_clean: a list of words containing the processed tweet</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">stemmer</span> <span class="o">=</span> <span class="n">PorterStemmer</span><span class="p">()</span>
+    <span class="n">stopwords_english</span> <span class="o">=</span> <span class="n">stopwords</span><span class="o">.</span><span class="n">words</span><span class="p">(</span><span class="s1">&#39;english&#39;</span><span class="p">)</span>
+    <span class="c1"># remove stock market tickers like $GE</span>
+    <span class="n">tweet</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\$\w*&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">tweet</span><span class="p">)</span>
+    <span class="c1"># remove old style retweet text &quot;RT&quot;</span>
+    <span class="n">tweet</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^RT[\s]+&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">tweet</span><span class="p">)</span>
+    <span class="c1"># remove hyperlinks</span>
+    <span class="n">tweet</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;https?:\/\/.*[\r\n]*&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">tweet</span><span class="p">)</span>
+    <span class="c1"># remove hashtags</span>
+    <span class="c1"># only removing the hash # sign from the word</span>
+    <span class="n">tweet</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">tweet</span><span class="p">)</span>
+    <span class="c1"># tokenize tweets</span>
+    <span class="n">tokenizer</span> <span class="o">=</span> <span class="n">TweetTokenizer</span><span class="p">(</span><span class="n">preserve_case</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strip_handles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                               <span class="n">reduce_len</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">tweet_tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">tokenize</span><span class="p">(</span><span class="n">tweet</span><span class="p">)</span>
+
+    <span class="n">tweets_clean</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">tweet_tokens</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stopwords_english</span> <span class="ow">and</span>  <span class="c1"># remove stopwords</span>
+            <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">punctuation</span><span class="p">):</span>  <span class="c1"># remove punctuation</span>
+            <span class="c1"># tweets_clean.append(word)</span>
+            <span class="n">stem_word</span> <span class="o">=</span> <span class="n">stemmer</span><span class="o">.</span><span class="n">stem</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>  <span class="c1"># stemming word</span>
+            <span class="n">tweets_clean</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stem_word</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tweets_clean</span>
+
+<span class="c1"># Credits: https://www.kaggle.com/tanulsingh077/twitter-sentiment-extaction-analysis-eda-and-model?scriptVersionId=31982648&amp;cellId=51</span>
+<span class="c1"># def clean_text(text):</span>
+<span class="c1">#     &#39;&#39;&#39;Make text lowercase, remove text in square brackets,remove links,remove punctuation</span>
+<span class="c1">#     and remove words containing numbers.&#39;&#39;&#39;</span>
+<span class="c1">#     text = str(text).lower()</span>
+<span class="c1">#     text = re.sub(&#39;\[.*?\]&#39;, &#39;&#39;, text)</span>
+<span class="c1">#     text = re.sub(&#39;https?://\S+|www\.\S+&#39;, &#39;&#39;, text)</span>
+<span class="c1">#     text = re.sub(&#39;&lt;.*?&gt;+&#39;, &#39;&#39;, text)</span>
+<span class="c1">#     text = re.sub(&#39;[%s]&#39; % re.escape(string.punctuation), &#39;&#39;, text)</span>
+<span class="c1">#     text = re.sub(&#39;\n&#39;, &#39;&#39;, text)</span>
+<span class="c1">#     text = re.sub(&#39;\w*\d\w*&#39;, &#39;&#39;, text)</span>
+<span class="c1">#     return text</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Import-Data">Import Data<a class="anchor-link" href="#Import-Data"> </a></h1>
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">PATH</span> <span class="o">=</span> <span class="s1">&#39;../input/nlp-getting-started/&#39;</span>
+<span class="n">train</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">PATH</span><span class="si">}</span><span class="s1">train.csv&#39;</span><span class="p">)</span>
+<span class="n">test</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">PATH</span><span class="si">}</span><span class="s1">test.csv&#39;</span><span class="p">)</span>
+<span class="n">sample_submission</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">PATH</span><span class="si">}</span><span class="s1">sample_submission.csv&#39;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="EDA">EDA<a class="anchor-link" href="#EDA"> </a></h1>
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Keyword and location features have null values in the train as well as the test data sets.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train</span><span class="o">.</span><span class="n">info</span><span class="p">()</span> <span class="p">,</span> <span class="n">test</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>There is no significant class imbalance in this problem and can be considered as a balanced problem.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="1.-Let's-explore-the-keyword-feature.">1. Let's explore the keyword feature.<a class="anchor-link" href="#1.-Let's-explore-the-keyword-feature."> </a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>There are 221 unique values that the keyword feature takes.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train</span><span class="p">[</span><span class="s1">&#39;keyword&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let's look at top 10 keywords and their frequencies.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;keyword&#39;</span><span class="p">])[</span><span class="s1">&#39;keyword&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">()[:</span><span class="mi">10</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Data-Preprocessing">Data Preprocessing<a class="anchor-link" href="#Data-Preprocessing"> </a></h1>
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train</span><span class="p">[</span><span class="s1">&#39;text_clean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">train</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">process_tweet</span><span class="p">)</span>
+<span class="n">test</span><span class="p">[</span><span class="s1">&#39;text_clean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">test</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">process_tweet</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Split the data into train and validation sets.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">X</span> <span class="o">=</span> <span class="n">train</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="p">[</span><span class="s1">&#39;text_clean&#39;</span><span class="p">]]</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">train</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s1">&#39;target&#39;</span><span class="p">])</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_val</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_val</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span><span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stratify</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">type</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">X_val</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">y_val</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">X_train</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Develop-Naive-Bayes-algorithm-from-scratch">Develop Naive Bayes algorithm from scratch<a class="anchor-link" href="#Develop-Naive-Bayes-algorithm-from-scratch"> </a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+\begin{equation*}
+P(A | B)   =  \frac {P(B | A) *  P(A)}{P(B)}
+\end{equation*}<p>Prior probability: $P(A)$ is the probability of an event before new data is collected.
+<br />
+Posterior probability: $P(A\mid B)$ is the revised or updated probability of an event occurring after taking into consideration new information
+<br />
+Likelihood: $P(B\mid A)$ Referred to as likelihood.
+<br />
+Evidence: $P(B)$ Referred to as evidence.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Understanding-Naive-Bayes-Algorithm">Understanding Naive Bayes Algorithm<a class="anchor-link" href="#Understanding-Naive-Bayes-Algorithm"> </a></h3><p>This algorithm is all about conditional probabilities. The basic idea is to calculate the probability of observing different words given that they occur in a disaster or non-disaster tweet. For example, what is the probability of observing the word "ablaze", in a disaster and non-disaster tweet. $P(ablaze\mid disaster)$ and $P(ablaze\mid non-disaster)$. Similarly we can calculate these probabilities of all the words in the corpus and then use the Bayes Rule to calculate the inverse probability $P(disaster\mid ablaze)$.</p>
+<p>Let's understand how this can be used to classify a tweet as disaster or non-disaster.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Create a list of all the words in the corpus. This is also know as the vocabulary. The snippet below indicates how to do this.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_vocabulary</span><span class="p">(</span><span class="n">X_train</span><span class="p">):</span>
+    <span class="n">vocab</span> <span class="o">=</span> <span class="n">X_train</span><span class="p">[</span><span class="s1">&#39;text_clean&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="c1"># Convert series to list of tokens.</span>
+    <span class="n">vocab</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">vocab</span><span class="p">))</span> <span class="c1"># Unest the list.</span>
+    <span class="n">vocab</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">vocab</span><span class="p">)</span> <span class="c1"># Get the distinct tokens from list.</span>
+    <span class="n">vocab</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">vocab</span><span class="p">))</span> <span class="c1"># Convert the set to list</span>
+    <span class="k">return</span> <span class="n">vocab</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Next step is to calculate the probability of getting a disaster and non-disaster tweet $P(disaster)$ and $P(non-disaster)$. This is very simple since we have the labelled training data which we can use to get this. Using this we can define the prior which nothig but the ratio of disaster to non-disaster tweets in our training data. $$\frac{P(disaster)} {P(non-disaster)}$$</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_log_prior</span><span class="p">(</span><span class="n">y_train</span><span class="p">):</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span> <span class="c1"># Total number of tweets</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span> <span class="c1"># No of tweets about disasters.</span>
+    <span class="n">ND</span> <span class="o">=</span> <span class="n">T</span> <span class="o">-</span> <span class="n">D</span> <span class="c1"># No of tweets not about disasters.</span>
+
+    <span class="n">P_D</span> <span class="o">=</span> <span class="n">D</span> <span class="o">/</span> <span class="n">T</span> <span class="c1"># Probability of getting a tweet about disaster in the corpus.</span>
+    <span class="n">P_ND</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">P_D</span> <span class="c1"># Probability of getting a non-disaster tweet in the corpus.</span>
+    <span class="n">log_prior</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">P_D</span> <span class="o">/</span> <span class="n">P_ND</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">log_prior</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">frequency_dict</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">):</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">tweet</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span> <span class="p">(</span><span class="n">X_train</span><span class="p">[</span><span class="s1">&#39;text_clean&#39;</span><span class="p">],</span> <span class="n">y_train</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">tweet</span><span class="p">:</span>
+            <span class="n">pair</span> <span class="o">=</span> <span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span> 
+                <span class="n">d</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">d</span>           
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">compute_likelihood</span><span class="p">(</span><span class="n">freqs_dict</span><span class="p">,</span> <span class="n">vocab</span><span class="p">):</span>
+    <span class="c1"># Get the sum of frequencies of occurrence of words in case of disaster and non-disaster.</span>
+    <span class="n">sum_words_pos</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># Sum of the Frequency of a token in tweets that are about Disaster.</span>
+    <span class="n">sum_words_neg</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># Sum of the Frequency of a token in tweets that are Not Disaster related.</span>
+    <span class="n">loglikelihood</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    
+    <span class="k">for</span> <span class="n">pair</span><span class="p">,</span> <span class="n">cnt</span> <span class="ow">in</span> <span class="n">freqs_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">sum_words_pos</span> <span class="o">+=</span> <span class="n">cnt</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sum_words_neg</span> <span class="o">+=</span> <span class="n">cnt</span>
+            
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">vocab</span><span class="p">:</span>
+        <span class="n">pos_cnt</span> <span class="o">=</span> <span class="n">freqs_dict</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">token</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">neg_cnt</span> <span class="o">=</span> <span class="n">freqs_dict</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">token</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">p_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos_cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">sum_words_pos</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">vocab</span><span class="p">))</span> <span class="c1"># Probability that the tweet is about disaster given the word.</span>
+        <span class="n">p_neg</span> <span class="o">=</span> <span class="p">(</span><span class="n">neg_cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">sum_words_neg</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">vocab</span><span class="p">))</span> <span class="c1"># Probability that the tweet is not about disaster given the word.</span>
+        <span class="n">ratio</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">p_pos</span><span class="o">/</span><span class="n">p_neg</span><span class="p">)</span> <span class="c1"># Log likelihood for the word.</span>
+        <span class="n">loglikelihood</span><span class="p">[</span><span class="n">token</span><span class="p">]</span> <span class="o">=</span> <span class="n">ratio</span>
+    <span class="k">return</span> <span class="n">loglikelihood</span>  
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">train_naive_bayes</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">):</span>
+    <span class="n">logprior</span> <span class="o">=</span> <span class="n">get_log_prior</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span>
+    <span class="n">vocab</span> <span class="o">=</span> <span class="n">get_vocabulary</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+    <span class="n">freqs_dict</span> <span class="o">=</span> <span class="n">frequency_dict</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="n">loglikelihood</span> <span class="o">=</span> <span class="n">compute_likelihood</span><span class="p">(</span><span class="n">freqs_dict</span><span class="p">,</span> <span class="n">vocab</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">logprior</span><span class="p">,</span> <span class="n">loglikelihood</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">logprior</span><span class="p">,</span> <span class="n">loglikelihood</span> <span class="o">=</span> <span class="n">train_naive_bayes</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">predict_naive_bayes</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">logprior</span><span class="p">,</span> <span class="n">loglikelihood</span><span class="p">):</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">X</span><span class="o">.</span><span class="n">itertuples</span><span class="p">():</span>
+        <span class="n">prediction</span> <span class="o">=</span> <span class="n">logprior</span>    
+        <span class="n">tweet</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">text_clean</span>
+    
+        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tweet</span><span class="p">:</span>
+            <span class="n">prediction</span> <span class="o">+=</span> <span class="n">loglikelihood</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            
+        <span class="n">temp</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">prediction</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">y_pred</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">y_pred</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Check-accuracy-on-validation-set">Check accuracy on validation set<a class="anchor-link" href="#Check-accuracy-on-validation-set"> </a></h1>
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y_pred</span> <span class="o">=</span> <span class="n">predict_naive_bayes</span><span class="p">(</span><span class="n">X_val</span><span class="p">,</span>  <span class="n">logprior</span><span class="p">,</span> <span class="n">loglikelihood</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">actual</span><span class="p">,</span> <span class="n">prediction</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">y_val</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">actual</span> <span class="o">==</span> <span class="n">prediction</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">count</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_val</span><span class="p">))</span>    
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Prediction-on-Test-data.">Prediction on Test data.<a class="anchor-link" href="#Prediction-on-Test-data."> </a></h1>
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y_test</span> <span class="o">=</span> <span class="n">predict_naive_bayes</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">logprior</span><span class="p">,</span> <span class="n">loglikelihood</span><span class="p">)</span>
+<span class="n">df_out</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">test</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+    <span class="s1">&#39;target&#39;</span><span class="p">:</span> <span class="n">y_test</span> 
+<span class="p">})</span>
+<span class="n">df_out</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">&#39;df_out.csv&#39;</span><span class="p">,</span><span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Using-Naive-Bayes-from-Sklearn">Using Naive Bayes from Sklearn<a class="anchor-link" href="#Using-Naive-Bayes-from-Sklearn"> </a></h1><p>Now let's use</p>
+
+</div>
+</div>
+</div>
+</div>
+
+
+
+  </div><a class="u-url" href="/mlexplained/2021/08/23/Naive-Bayes-Explained.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/mlexplained/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/mlexplained/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/mlexplained/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Here we break the ML jargon into simple basic pieces using python code.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/magicaditya" title="magicaditya"><svg class="svg-icon grey"><use xlink:href="/mlexplained/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/magicadi04" title="magicadi04"><svg class="svg-icon grey"><use xlink:href="/mlexplained/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
