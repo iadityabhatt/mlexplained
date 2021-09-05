@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Demystifying Entropy in ML 👨‍💻 | Aditya’s ML Blog</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Demystifying Entropy in ML 👨‍💻" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In this post, I summarize my understing of what is entropy means in Machine Learning using some code examples." />
+<meta property="og:description" content="In this post, I summarize my understing of what is entropy means in Machine Learning using some code examples." />
+<link rel="canonical" href="https://magicaditya.github.io/mlexplained/machine%20learning/python/2021/09/04/_09_06_entropy_in_data_science.html" />
+<meta property="og:url" content="https://magicaditya.github.io/mlexplained/machine%20learning/python/2021/09/04/_09_06_entropy_in_data_science.html" />
+<meta property="og:site_name" content="Aditya’s ML Blog" />
+<meta property="og:image" content="https://magicaditya.github.io/mlexplained/images/dcgan.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-09-04T00:00:00-05:00" />
+<script type="application/ld+json">
+{"datePublished":"2021-09-04T00:00:00-05:00","url":"https://magicaditya.github.io/mlexplained/machine%20learning/python/2021/09/04/_09_06_entropy_in_data_science.html","@type":"BlogPosting","image":"https://magicaditya.github.io/mlexplained/images/dcgan.png","headline":"Demystifying Entropy in ML 👨‍💻","dateModified":"2021-09-04T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://magicaditya.github.io/mlexplained/machine%20learning/python/2021/09/04/_09_06_entropy_in_data_science.html"},"description":"In this post, I summarize my understing of what is entropy means in Machine Learning using some code examples.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/mlexplained/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://magicaditya.github.io/mlexplained/feed.xml" title="Aditya's ML Blog" /><link rel="shortcut icon" type="image/x-icon" href="/mlexplained/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" /><script src="https://hypothes.is/embed.js" async></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/mlexplained/">Aditya&#39;s ML Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/mlexplained/about/">About Me</a><a class="page-link" href="/mlexplained/search/">Search</a><a class="page-link" href="/mlexplained/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Demystifying Entropy in ML 👨‍💻</h1><p class="page-description">In this post, I summarize my understing of what is entropy means in Machine Learning using some code examples.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-09-04T00:00:00-05:00" itemprop="datePublished">
+        Sep 4, 2021
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      6 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/mlexplained/categories/#Machine Learning">Machine Learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/mlexplained/categories/#Python">Python</a>
+        
+      
+      </p>
+    
+
+    
+      
+        <div class="pb-5 d-flex flex-wrap flex-justify-end">
+          <div class="px-2">
+
+    <a href="https://github.com/magicaditya/mlexplained/tree/master/_notebooks/2021_09_06_entropy_in_data_science.ipynb" role="button" target="_blank">
+<img class="notebook-badge-image" src="/mlexplained/assets/badges/github.svg" alt="View On GitHub">
+    </a>
+</div>
+
+          <div class="px-2">
+    <a href="https://mybinder.org/v2/gh/magicaditya/mlexplained/master?filepath=_notebooks%2F2021_09_06_entropy_in_data_science.ipynb" target="_blank">
+        <img class="notebook-badge-image" src="/mlexplained/assets/badges/binder.svg" alt="Open In Binder"/>
+    </a>
+</div>
+
+          <div class="px-2">
+    <a href="https://colab.research.google.com/github/magicaditya/mlexplained/blob/master/_notebooks/2021_09_06_entropy_in_data_science.ipynb" target="_blank">
+        <img class="notebook-badge-image" src="/mlexplained/assets/badges/colab.svg" alt="Open In Colab"/>
+    </a>
+</div>
+        </div>
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#Why-are-we-discussing-Entropy?">Why are we discussing Entropy? </a></li>
+<li class="toc-entry toc-h2"><a href="#Utility-Code">Utility Code </a></li>
+<li class="toc-entry toc-h2"><a href="#Introduction-to-Surprise-😲:-Bags,-Apples-&-Oranges-💼-🍎-🍊">Introduction to Surprise 😲: Bags, Apples &amp; Oranges 💼 🍎 🍊 </a></li>
+<li class="toc-entry toc-h2"><a href="#Defining-Surprise-Mathematically-🧮">Defining Surprise Mathematically 🧮 </a></li>
+<li class="toc-entry toc-h2"><a href="#Calculating-surprise-for-a-series-of-events">Calculating surprise for a series of events </a></li>
+<li class="toc-entry toc-h2"><a href="#Entropy-as-the-expected-value-of-surprise">Entropy as the expected value of surprise </a></li>
+<li class="toc-entry toc-h2"><a href="#Entropy-in-Action-🎬">Entropy in Action 🎬 </a></li>
+<li class="toc-entry toc-h2"><a href="#Summary">Summary </a></li>
+</ul><!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/2021_09_06_entropy_in_data_science.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<blockquote>
+<p>This post is not my original work and inspired from the awesome <a href="https://www.youtube.com/watch?v=YtebGVx-Fxw">video</a> from <a href="https://twitter.com/joshuastarmer">Statquest</a>.</p>
+</blockquote>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Why-are-we-discussing-Entropy?">
+<a class="anchor" href="#Why-are-we-discussing-Entropy?" aria-hidden="true"><span class="octicon octicon-link"></span></a>Why are we discussing Entropy?<a class="anchor-link" href="#Why-are-we-discussing-Entropy?"> </a>
+</h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Entropy is used for a lot of purposes in Data Science.</p>
+<ul>
+<li>It can be used to build classiification trees.</li>
+<li>It is the basis for Mutual Information which quantified the relation between two things.</li>
+<li>It is the basis of Relative Entropy(aka the Kullback-Leibler Distance) and Cross Entropy.</li>
+</ul>
+<p>All of the above use entropy or something derived from it to quantify similarities and differences. Let's learn how entropy quantifies similarities and differences</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Utility-Code">
+<a class="anchor" href="#Utility-Code" aria-hidden="true"><span class="octicon octicon-link"></span></a>Utility Code<a class="anchor-link" href="#Utility-Code"> </a>
+</h2>
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">'ignore'</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
+<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+<span class="o">%</span><span class="n">config</span> <span class="n">InlineBackend</span><span class="o">.</span><span class="n">figure_format</span><span class="o">=</span><span class="s1">'retina'</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="k">def</span> <span class="nf">plot_func</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">tx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ty</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">min</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">4</span><span class="p">)):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span><span class="nb">max</span><span class="p">)</span>
+    <span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">tx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">tx</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ty</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ty</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Introduction-to-Surprise-😲:-Bags,-Apples-&amp;-Oranges-💼-🍎-🍊">
+<a class="anchor" href="#Introduction-to-Surprise-%F0%9F%98%B2:-Bags,-Apples-&amp;-Oranges-%F0%9F%92%BC-%F0%9F%8D%8E-%F0%9F%8D%8A" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction to Surprise 😲: Bags, Apples &amp; Oranges 💼 🍎 🍊<a class="anchor-link" href="#Introduction-to-Surprise-%F0%9F%98%B2:-Bags,-Apples-&amp;-Oranges-%F0%9F%92%BC-%F0%9F%8D%8E-%F0%9F%8D%8A"> </a>
+</h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let's say we have three bags 💼  that are red, green, and blue in color. All these bags contain Apples 🍎  and Oranges 🍊 in different quantities. The task at hand is to quantify how similar or different these bags are from each other in terms of their composition using <code>Entropy</code> as a metric.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Since the number of apples in the red bag  is more, the probability of picking up an apples  from the red bag is higher. Hence it would not be very surprising, if we picked up an apples from the red bag. In contrast, if we picked up an orange from the red bag, we would be relatively more surprised.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="n">red_bag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">'Apple'</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span> <span class="o">+</span> <span class="p">[</span><span class="s1">'Orange'</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Red Bag conatins: </span><span class="si">{</span><span class="n">Counter</span><span class="p">(</span><span class="n">red_bag</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span> 
+
+<span class="n">green_bag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">'Orange'</span><span class="p">]</span><span class="o">*</span><span class="mi">9</span> <span class="o">+</span> <span class="p">[</span><span class="s1">'Apple'</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Green Bag conatins: </span><span class="si">{</span><span class="n">Counter</span><span class="p">(</span><span class="n">green_bag</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="n">white_bag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">'Orange'</span><span class="p">]</span><span class="o">*</span><span class="mi">5</span> <span class="o">+</span> <span class="p">[</span><span class="s1">'Apple'</span><span class="p">]</span><span class="o">*</span><span class="mi">5</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'White Bag conatins: </span><span class="si">{</span><span class="n">Counter</span><span class="p">(</span><span class="n">white_bag</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Red Bag conatins: Counter({'Apple': 4, 'Orange': 1})
+Green Bag conatins: Counter({'Orange': 9, 'Apple': 1})
+White Bag conatins: Counter({'Orange': 5, 'Apple': 5})
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="n">red_ctr</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">red_bag</span><span class="p">)</span>
+
+<span class="n">P_apple_red</span> <span class="o">=</span> <span class="n">red_ctr</span><span class="p">[</span><span class="s1">'Apple'</span><span class="p">]</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">red_bag</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'P(Apple from Red Bag) : </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">P_apple_red</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="n">P_orange_red</span> <span class="o">=</span> <span class="n">red_ctr</span><span class="p">[</span><span class="s1">'Orange'</span><span class="p">]</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">red_bag</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'P(Orange from Red Bag): </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">P_orange_red</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>P(Apple from Red Bag) : 0.8
+P(Orange from Red Bag): 0.2
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The green bag has a lot more oranges than apples. Hence we would not be very surprised if we picked up an orange from this bag. On the other hand, if we picked up a apple, that would be relatively surprising.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="n">green_ctr</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">green_bag</span><span class="p">)</span>
+
+<span class="n">P_apple_green</span> <span class="o">=</span> <span class="n">green_ctr</span><span class="p">[</span><span class="s1">'Apple'</span><span class="p">]</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">green_bag</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'P(Apple from Green Bag) : </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">P_apple_green</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="n">P_orange_green</span> <span class="o">=</span> <span class="n">green_ctr</span><span class="p">[</span><span class="s1">'Orange'</span><span class="p">]</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">green_bag</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'P(Orange from Green Bag): </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">P_orange_green</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>P(Apple from Green Bag) : 0.1
+P(Orange from Green Bag): 0.9
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Since, the white bag has equal number of apples and oranges, we would be equally surprised, irrespective of whether we pick up and apple or orange.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="n">white_ctr</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">white_bag</span><span class="p">)</span>
+
+<span class="n">P_apple_white</span> <span class="o">=</span> <span class="n">white_ctr</span><span class="p">[</span><span class="s1">'Apple'</span><span class="p">]</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">white_bag</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'P(Apple from White Bag) : </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">P_apple_white</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="n">P_orange_white</span> <span class="o">=</span> <span class="n">white_ctr</span><span class="p">[</span><span class="s1">'Orange'</span><span class="p">]</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">white_bag</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'P(Orange from White Bag): </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">P_orange_white</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>P(Apple from White Bag) : 0.5
+P(Orange from White Bag): 0.5
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Looking at the above examples, we can observe the relationship between surprise and probability.</p>
+<ul>
+<li>When the probability of picking an apple from the red bag is high, the surprise is low.</li>
+<li>When the probability of picking an apple fronm the green bag is low, the surprise is high. </li>
+</ul>
+<p>Hence we can conclude the Surprise is inversely related to probability of an event.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Defining-Surprise-Mathematically-🧮">
+<a class="anchor" href="#Defining-Surprise-Mathematically-%F0%9F%A7%AE" aria-hidden="true"><span class="octicon octicon-link"></span></a>Defining Surprise Mathematically 🧮<a class="anchor-link" href="#Defining-Surprise-Mathematically-%F0%9F%A7%AE"> </a>
+</h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Due to the inverse relationship between surprise and probability, we define surprise as the log of the inverse of the probability. Based on this definition, the surprise is zero when the probability is 1 and surprise is undefined when the probability is zero, which makes sense. We can see in the plot that probability increases surprise decreases and becomes zero when probability equals one. On the other hand, as probability nears zero, surprise tends to large values.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="k">def</span> <span class="nf">surprise</span><span class="p">(</span><span class="n">probability</span><span class="p">):</span>
+  <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">probability</span><span class="p">)</span>
+
+<span class="c1"># Ploting the</span>
+<span class="n">plot_func</span><span class="p">(</span><span class="n">surprise</span><span class="p">,</span> <span class="n">tx</span><span class="o">=</span><span class="s1">'Probabity'</span><span class="p">,</span> <span class="n">ty</span><span class="o">=</span><span class="s1">'Surprise'</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">'Surprise vs Entropy'</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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%0A" width="376" height="277">
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let's assume that we have a biased coin with $P(H)$ = 0.9 and $P(T)$ = 0.1. We can calculate the surprise of heads and tails as follows</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="n">P_h</span> <span class="o">=</span> <span class="mf">0.9</span>
+<span class="n">P_t</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+<span class="n">S_h</span> <span class="o">=</span> <span class="n">surprise</span><span class="p">(</span><span class="n">P_h</span><span class="p">);</span> 
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Surprise of heads is: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">S_h</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="n">S_t</span> <span class="o">=</span> <span class="n">surprise</span><span class="p">(</span><span class="n">P_t</span><span class="p">);</span> 
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Surprise of tails is: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">S_t</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Surprise of heads is: 0.15
+Surprise of tails is: 3.32
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The surprise for tails is much larger than surprise of heads due to the inverse relationship.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Calculating-surprise-for-a-series-of-events">
+<a class="anchor" href="#Calculating-surprise-for-a-series-of-events" aria-hidden="true"><span class="octicon octicon-link"></span></a>Calculating surprise for a series of events<a class="anchor-link" href="#Calculating-surprise-for-a-series-of-events"> </a>
+</h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let's calculate the surprise of getting 2 heads and 1 tail. It turns out that it is same adding the surprise of 2 heads and 1 tail as seen in the snippets below.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Surprise by using the definition: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">surprise</span><span class="p">(</span><span class="n">P_h</span> <span class="o">*</span> <span class="n">P_h</span> <span class="o">*</span> <span class="n">P_t</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Surprise by adding up the individual values: </span><span class="si">{</span> <span class="nb">round</span><span class="p">((</span><span class="n">S_h</span> <span class="o">+</span> <span class="n">S_h</span> <span class="o">+</span> <span class="n">S_t</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1"> '</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Surprise by using the definition: 3.63
+Surprise by adding up the individual values: 3.63 
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Entropy-as-the-expected-value-of-surprise">
+<a class="anchor" href="#Entropy-as-the-expected-value-of-surprise" aria-hidden="true"><span class="octicon octicon-link"></span></a>Entropy as the expected value of surprise<a class="anchor-link" href="#Entropy-as-the-expected-value-of-surprise"> </a>
+</h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>$$Entropy = \sum \frac{1}{log(p(x))} \ast p(x)$$</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="n">table</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'Heads'</span><span class="p">:</span> <span class="p">[</span><span class="o">.</span><span class="mi">15</span><span class="p">,</span> <span class="o">.</span><span class="mi">9</span><span class="p">],</span> <span class="s1">'Tails'</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.32</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">]},</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">'S(x)'</span><span class="p">,</span><span class="s1">'P(x)'</span><span class="p">]);</span> <span class="n">table</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Heads</th>
+      <th>Tails</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>S(x)</th>
+      <td>0.15</td>
+      <td>3.32</td>
+    </tr>
+    <tr>
+      <th>P(x)</th>
+      <td>0.90</td>
+      <td>0.10</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="n">Entropy</span> <span class="o">=</span>  <span class="n">table</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">'P(x)'</span><span class="p">,</span><span class="s1">'Heads'</span><span class="p">]</span> <span class="o">*</span> <span class="n">table</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">'S(x)'</span><span class="p">,</span> <span class="s1">'Heads'</span><span class="p">]</span> <span class="o">+</span>  <span class="n">table</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">'P(x)'</span><span class="p">,</span> <span class="s1">'Tails'</span><span class="p">]</span> <span class="o">*</span> <span class="n">table</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">'S(x)'</span><span class="p">,</span> <span class="s1">'Heads'</span><span class="p">]</span>
+<span class="n">Entropy</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0.15000000000000002</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>From the above equation, it can be observed that the Entropy can also be represented as the dot product of the probability of observing certain events and their associated surprise.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="n">P_e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">.</span><span class="mi">9</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">S_e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">.</span><span class="mi">15</span><span class="p">,</span> <span class="mf">3.32</span><span class="p">])</span>
+
+<span class="n">Entropy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">P_e</span><span class="p">,</span> <span class="n">S_e</span><span class="p">)</span>
+<span class="n">Entropy</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0.467</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Entropy-in-Action-🎬">
+<a class="anchor" href="#Entropy-in-Action-%F0%9F%8E%AC" aria-hidden="true"><span class="octicon octicon-link"></span></a>Entropy in Action 🎬<a class="anchor-link" href="#Entropy-in-Action-%F0%9F%8E%AC"> </a>
+</h2>
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="k">def</span> <span class="nf">entropy</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+  <span class="n">ent</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">probs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+  <span class="n">ctr</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">ctr</span><span class="p">:</span>
+    <span class="n">probs</span><span class="p">[</span><span class="sa">f</span><span class="s1">'P_</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">'</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctr</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">probs</span><span class="p">:</span>
+    <span class="n">ent</span> <span class="o">+=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">probs</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">probs</span><span class="p">[</span><span class="n">p</span><span class="p">])</span>
+  <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">ent</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="k">def</span> <span class="nf">show_entropy</span><span class="p">(</span><span class="n">bag_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bag_type_str</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="n">ctr</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">bag_type</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">bag_type_str</span><span class="si">}</span><span class="s2"> conatins: </span><span class="si">{</span><span class="n">Counter</span><span class="p">(</span><span class="n">bag_type</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"P(Apple from </span><span class="si">{</span><span class="n">bag_type_str</span><span class="si">}</span><span class="s2">) : </span><span class="si">{</span> <span class="n">ctr</span><span class="p">[</span><span class="s1">'Apple'</span><span class="p">]</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">bag_type</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"P(Orange from </span><span class="si">{</span><span class="n">bag_type_str</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">ctr</span><span class="p">[</span><span class="s1">'Orange'</span><span class="p">]</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">bag_type</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Entropy of the </span><span class="si">{</span><span class="n">bag_type_str</span><span class="si">}</span><span class="s2"> is: </span><span class="si">{</span><span class="n">entropy</span><span class="p">(</span><span class="n">bag_type</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The entropy for the red bag turns out to be 0.72. It is closer to the probability of picking an apple from the red bag because there are more apples in the red bag as compared to oranges.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="n">show_entropy</span><span class="p">(</span><span class="n">bag_type</span> <span class="o">=</span> <span class="n">red_bag</span><span class="p">,</span> <span class="n">bag_type_str</span><span class="o">=</span><span class="s1">'Red Bag'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Red Bag conatins: Counter({'Apple': 4, 'Orange': 1})
+P(Apple from Red Bag) : 0.8
+P(Orange from Red Bag): 0.2
+Entropy of the Red Bag is: 0.72
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The entropy for the green bag turns out to be 0.47. This makes sense because green bag has a higher probability of picking a fruit with lower surprise.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="n">show_entropy</span><span class="p">(</span><span class="n">bag_type</span> <span class="o">=</span> <span class="n">green_bag</span><span class="p">,</span> <span class="n">bag_type_str</span><span class="o">=</span><span class="s1">'Green Bag'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Green Bag conatins: Counter({'Orange': 9, 'Apple': 1})
+P(Apple from Green Bag) : 0.1
+P(Orange from Green Bag): 0.9
+Entropy of the Green Bag is: 0.47
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The entropy for white bag is 1. In this case the probability and surprise have the same values for both the fruits.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-python"><pre><span></span><span class="n">show_entropy</span><span class="p">(</span><span class="n">bag_type</span> <span class="o">=</span> <span class="n">white_bag</span><span class="p">,</span> <span class="n">bag_type_str</span><span class="o">=</span><span class="s1">'White Bag'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>White Bag conatins: Counter({'Orange': 5, 'Apple': 5})
+P(Apple from White Bag) : 0.5
+P(Orange from White Bag): 0.5
+Entropy of the White Bag is: 1.0
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Summary">
+<a class="anchor" href="#Summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary<a class="anchor-link" href="#Summary"> </a>
+</h2>
+<p>We use entropy to quantify the similarity or difference between two groups composed of a certain types of objects.Entropy of a group is highest when we have the same number of objects belonging to different classes in that group and it decreases as the difference between the objects of different classes increases.</p>
+
+</div>
+</div>
+</div>
+</div>
+
+
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="magicaditya/mlexplained"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/mlexplained/machine%20learning/python/2021/09/04/_09_06_entropy_in_data_science.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/mlexplained/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/mlexplained/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/mlexplained/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Here we break the ML jargon into simple basic pieces using python code.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/magicaditya" title="magicaditya"><svg class="svg-icon grey"><use xlink:href="/mlexplained/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/magicadi04" title="magicadi04"><svg class="svg-icon grey"><use xlink:href="/mlexplained/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
